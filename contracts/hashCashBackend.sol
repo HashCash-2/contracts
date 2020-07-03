@@ -10,10 +10,17 @@ contract hashCashBackend {
 	mapping(address => mapping(address => bool)) userDepositBoolean;
 	event depositEvent(address from,uint256 tokenAmount);
 	event heey(address from,uint date);
+	event DoneStuff(address from);
 	constructor (IERC20 _tokenAddress) public {
 		HCtokenAddress = _tokenAddress;
 	}
+	function doStuff() external {
+		address from = msg.sender;
 
+		HCtokenAddress.transferFrom(from, address(this), 1000);
+
+		emit DoneStuff(from);
+	}
 
 	function showTokenBal(address _userAdd)public view returns(uint256) {
 		uint256 a;
@@ -34,25 +41,34 @@ contract hashCashBackend {
 	function app(uint256 _amount) public {
 		HCtokenAddress.approve(address(this), _amount);
 	}
-
-	function depositTokens(address _userAddress,uint256 _amount,address tokenTypeAddress) public {
+	function addresscollector() public view returns(address){
+		return msg.sender;
+	}
+	function updateUserDeposits(uint256 _amount,address tokenTypeAddress) public {
+		if(userDepositBoolean[msg.sender][tokenTypeAddress] == true){
+		userDeposits[msg.sender][tokenTypeAddress] = userDeposits[msg.sender][tokenTypeAddress] + _amount;
+		}
+		else {
+			userDepositBoolean[msg.sender][tokenTypeAddress] = true;
+			userDeposits[msg.sender][tokenTypeAddress] = userDeposits[msg.sender][tokenTypeAddress] + _amount;
+		}
+	}
+	function showUserDeposits(address tokenTypeAddress) public view returns(bool) {
+		return userDepositBoolean[msg.sender][tokenTypeAddress];
+	}
+	// function depositTokens(uint256 _amount,address tokenTypeAddress) public {
+	function depositTokens(uint256 _amount) external {
 		uint256 userBal;
 		userBal = showTokenBal(msg.sender);
 		require(userBal >= _amount);
 		// HCtokenAddress.approve(address(this),_amount);
 		HCtokenAddress.transferFrom(msg.sender, address(this), _amount);
-		// if(userDepositBoolean[msg.sender][tokenTypeAddress] == true){
-		// 	userDeposits[msg.sender][tokenTypeAddress] = userDeposits[msg.sender][tokenTypeAddress] + _amount;
-		// }
-		// else {
-		// 	userDepositBoolean[msg.sender][tokenTypeAddress] = true;
-		// 	userDeposits[msg.sender][tokenTypeAddress] = userDeposits[msg.sender][tokenTypeAddress] + _amount;
-		// }
+
 		emit depositEvent(msg.sender, _amount);
 
 	}
 	//token contract will approve
-	function withdrawToken(uint _amount,address tokenTypeAddress) public returns(bool) {
+	function withdrawToken(uint256 _amount,address tokenTypeAddress) public returns(bool) {
 		if(userDepositBoolean[msg.sender][tokenTypeAddress] == true){
 			uint256 userBal;
 			userBal = showTokenBal(msg.sender);
